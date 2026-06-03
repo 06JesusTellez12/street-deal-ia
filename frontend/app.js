@@ -10,89 +10,164 @@ const confidenceLabel = document.getElementById('confidenceLabel');
 
 let currentFile = null;
 
-// Controlar y desplegar la previsualización de la foto
 function handleFileSelection(file) {
-    if (file && file.type.startsWith('image/')) {
-        currentFile = file;
-        const reader = new FileReader();
-        
-        reader.addEventListener('load', function() {
-            previewImage.setAttribute('src', this.result);
-            previewContainer.classList.remove('hidden'); 
-        });
-        
-        reader.readAsDataURL(file);
-    } else {
-        alert("Por favor, sube un formato de imagen válido (.jpg, .png).");
-    }
-}
 
-// Carga por explorador de archivos tradicional
-imageInput.addEventListener('change', function() {
-    if (this.files[0]) {
-        handleFileSelection(this.files[0]);
-    }
-});
-
-// Capturar pegado desde el portapapeles (Ctrl + V)
-window.addEventListener('paste', function(event) {
-    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-    for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-            const file = items[i].getAsFile();
-            handleFileSelection(file);
-            break;
-        }
-    }
-});
-
-// Petición de inferencia a FastAPI
-analyzeBtn.addEventListener('click', async () => {
-    if (!currentFile) {
-        alert("Primero debes seleccionar o pegar una foto de un vehículo.");
+    if (!file.type.startsWith('image/')) {
+        alert("Selecciona una imagen válida");
         return;
     }
 
-    // Activar spinner de carga en el botón
-    spinner.classList.remove('hidden');
-    btnText.innerText = "Analizando...";
-    analyzeBtn.disabled = true;
-    resultContainer.classList.add('hidden');
+    currentFile = file;
 
-    const formData = new FormData();
-    formData.append('file', currentFile);
+    const reader = new FileReader();
 
-    try {
-        const response = await fetch('http://127.0.0.1:8000/predict', {
-            method: 'POST',
-            body: formData
-        });
+    reader.onload = function () {
 
-        if (!response.ok) throw new Error("Fallo en comunicación");
+        previewImage.src = reader.result;
 
-        const data = await response.json();
+        previewContainer.classList.remove(
+            'hidden'
+        );
+    };
 
-        // Desplegar resultados e iluminar etiquetas
-        detectionLabel.innerText = data.label;
-        confidenceLabel.innerText = (data.confidence * 100).toFixed(2) + "%";
-        resultContainer.classList.remove('hidden');
+    reader.readAsDataURL(file);
+}
 
-        // 🎉 Si el modelo tiene buena confianza, lanza confeti
-        if (data.confidence > 0.70) {
-            confetti({
-                particleCount: 140,
-                spread: 75,
-                origin: { y: 0.65 }
-            });
+imageInput.addEventListener(
+    'change',
+    function () {
+
+        if (this.files[0]) {
+            handleFileSelection(
+                this.files[0]
+            );
+        }
+    }
+);
+
+window.addEventListener(
+    'paste',
+    function (event) {
+
+        const items =
+            event.clipboardData.items;
+
+        for (let i = 0; i < items.length; i++) {
+
+            if (
+                items[i].type.indexOf(
+                    'image'
+                ) !== -1
+            ) {
+
+                const file =
+                    items[i].getAsFile();
+
+                handleFileSelection(file);
+
+                break;
+            }
+        }
+    }
+);
+
+analyzeBtn.addEventListener(
+    'click',
+    async () => {
+
+        if (!currentFile) {
+
+            alert(
+                "Selecciona una imagen primero"
+            );
+
+            return;
         }
 
-    } catch (error) {
-        console.error(error);
-        alert("No se pudo obtener respuesta del servidor local de IA.");
-    } finally {
-        // Restaurar estado del botón
-        spinner.classList.add('hidden');
-        btnText.innerText = "Analizar Imagen";
-        analyzeBtn.disabled = false;
+        spinner.classList.remove(
+            'hidden'
+        );
+
+        btnText.innerText =
+            "Analizando...";
+
+        analyzeBtn.disabled = true;
+
+        resultContainer.classList.add(
+            'hidden'
+        );
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            'file',
+            currentFile
+        );
+
+        try {
+
+            const response =
+                await fetch(
+                    '/predict',
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Error del servidor"
+                );
+            }
+
+            const data =
+                await response.json();
+
+            detectionLabel.innerText =
+                data.label;
+
+            confidenceLabel.innerText =
+                (
+                    data.confidence * 100
+                ).toFixed(2) + "%";
+
+            resultContainer.classList.remove(
+                'hidden'
+            );
+
+            if (
+                data.confidence > 0.70
+            ) {
+
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: {
+                        y: 0.6
+                    }
+                });
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Error conectando con la IA"
+            );
+
+        } finally {
+
+            spinner.classList.add(
+                'hidden'
+            );
+
+            btnText.innerText =
+                "Analizar Imagen";
+
+            analyzeBtn.disabled = false;
+        }
     }
-});
+);

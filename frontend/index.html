@@ -4,89 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Street Deal - IA Predictor</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;600;700&display=swap');
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            min-height: 100vh;
-            margin: 0;
-            
-            /* 1. COLOR DE FONDO BASE (Oscuro profundo) */
-            background-color: #0d0f12;
-            
-            /* 2. TEXTURA GEOMÉTRICA DE HEXÁGONOS EN 3D CON GRIETAS NARANJAS (TU LOGO) */
-            background-image: 
-                /* Viñeta oscura en las esquinas para dar profundidad y centrar la atención */
-                radial-gradient(circle, transparent 20%, #050608 85%),
-                /* Patrón de líneas hexagonales con el naranja exacto de tu marca (#ff7a00) */
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='69.282' viewBox='0 0 40 69.282'%3E%3Cg fill='none' stroke='%23ff7a00' stroke-width='1.5' stroke-opacity='0.45'%3E%3Cpath d='M 40 0 L 20 11.547 L 0 0 L 0 23.094 L 20 34.641 L 40 23.094 Z M 0 34.641 L 20 46.188 L 40 34.641 L 40 57.735 L 20 69.282 L 0 57.735 Z'/%3E%3C/g%3E%3Cg fill='%23181d26' fill-opacity='0.93'%3E%3Cpath d='M 38 1.155 L 20 11.547 L 2 1.155 L 2 22 L 20 32.392 L 38 22 Z M 2 35.796 L 20 46.188 L 38 35.796 L 38 56.641 L 20 67.033 L 2 56.641 Z'/%3E%3C/g%3E%3C/svg%3E");
-            
-            /* Ajuste de escala para que la malla se vea fina, repetible y limpia */
-            background-size: auto, 55px 95px;
-            background-attachment: fixed;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body{
+            font-family:'Inter',sans-serif;
+            min-height:100vh;
+            margin:0;
+
+            background-color:#0d0f12;
+
+            background-image:
+            radial-gradient(circle, transparent 20%, #050608 85%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='69.282' viewBox='0 0 40 69.282'%3E%3Cg fill='none' stroke='%23ff7a00' stroke-width='1.5' stroke-opacity='0.45'%3E%3Cpath d='M 40 0 L 20 11.547 L 0 0 L 0 23.094 L 20 34.641 L 40 23.094 Z M 0 34.641 L 20 46.188 L 40 34.641 L 40 57.735 L 20 69.282 L 0 57.735 Z'/%3E%3C/g%3E%3Cg fill='%23181d26' fill-opacity='0.93'%3E%3Cpath d='M 38 1.155 L 20 11.547 L 2 1.155 L 2 22 L 20 32.392 L 38 22 Z M 2 35.796 L 20 46.188 L 38 35.796 L 38 56.641 L 20 67.033 L 2 56.641 Z'/%3E%3C/g%3E%3C/svg%3E");
+
+            background-size:auto,55px 95px;
+            background-attachment:fixed;
         }
-        
-        .hidden { display: none; }
+
+        .hidden{
+            display:none;
+        }
     </style>
 </head>
+
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-slate-900/90 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800/80 max-w-md w-full p-6 transition-all duration-300">
-        
-        <div class="flex flex-col items-center mb-6">
-            <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-orange-500 shadow-lg shadow-orange-500/30 bg-black flex items-center justify-center">
-                <img src="Logo.jpeg" alt="Street Deal Logo" class="w-full h-full object-cover" onerror="this.src='logo.jpg'; this.onerror=null;">
-            </div>
-            <p class="text-xs font-bold text-orange-500 tracking-widest uppercase mt-3">Plataforma de Reconocimiento</p>
+<div class="bg-slate-900/90 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-800/80 max-w-md w-full p-6">
+
+    <div class="flex flex-col items-center mb-6">
+
+        <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-orange-500 shadow-lg shadow-orange-500/30 bg-black flex items-center justify-center">
+
+            <img
+                src="Logo.jpeg"
+                alt="Street Deal Logo"
+                class="w-full h-full object-cover"
+                onerror="this.src='logo.jpg';"
+            >
+
         </div>
 
-        <div class="space-y-4">
-            <label class="block text-sm font-semibold text-slate-300">Selecciona, arrastra o pega (Ctrl + V) la foto:</label>
-            
-            <div class="flex items-center justify-center w-full">
-                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-700 border-dashed rounded-2xl cursor-pointer bg-slate-950/40 hover:bg-slate-950/80 transition-colors duration-200">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg class="w-8 h-8 mb-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                        <p class="text-sm text-slate-400"><span class="font-semibold text-orange-500">Cargar archivo</span> o usar Ctrl + V</p>
-                    </div>
-                    <input id="imageInput" type="file" class="hidden" accept="image/*" />
-                </label>
-            </div>
+        <p class="text-xs font-bold text-orange-500 tracking-widest uppercase mt-3">
+            Plataforma de Reconocimiento
+        </p>
 
-            <div id="previewContainer" class="hidden w-full flex justify-center mt-2">
-                <div class="relative rounded-2xl overflow-hidden shadow-xl border border-slate-800 max-h-64 w-full">
-                    <img id="previewImage" src="" alt="Vista previa" class="object-cover w-full h-full max-h-64" />
+    </div>
+
+    <div class="space-y-4">
+
+        <label class="block text-sm font-semibold text-slate-300">
+            Selecciona, arrastra o pega (Ctrl + V) la foto:
+        </label>
+
+        <div class="flex items-center justify-center w-full">
+
+            <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-700 border-dashed rounded-2xl cursor-pointer bg-slate-950/40 hover:bg-slate-950/80 transition-colors duration-200">
+
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+
+                    <svg class="w-8 h-8 mb-3 text-orange-500"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                        </path>
+
+                    </svg>
+
+                    <p class="text-sm text-slate-400">
+                        <span class="font-semibold text-orange-500">
+                            Cargar archivo
+                        </span>
+                        o usar Ctrl + V
+                    </p>
+
                 </div>
-            </div>
 
-            <button id="analyzeBtn" class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none">
-                <svg id="spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span id="btnText">Analizar Imagen</span>
-            </button>
+                <input
+                    id="imageInput"
+                    type="file"
+                    class="hidden"
+                    accept="image/*"
+                >
+
+            </label>
+
         </div>
 
-        <div id="resultContainer" class="hidden mt-6 bg-slate-950/60 rounded-2xl p-5 border border-slate-800/60">
-            <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase mb-3">Resultado del Análisis</h3>
-            
-            <div class="flex justify-between items-center py-2 border-b border-slate-800/80">
-                <span class="text-sm text-slate-400">Detección de Marca:</span>
-                <span id="detectionLabel" class="text-base font-bold text-white">-</span>
+        <div id="previewContainer"
+             class="hidden w-full flex justify-center mt-2">
+
+            <div class="relative rounded-2xl overflow-hidden shadow-xl border border-slate-800 max-h-64 w-full">
+
+                <img
+                    id="previewImage"
+                    src=""
+                    alt="Vista previa"
+                    class="object-cover w-full h-full max-h-64"
+                >
+
             </div>
-            
-            <div class="flex justify-between items-center py-2 pt-3">
-                <span class="text-sm text-slate-400">Confianza de IA:</span>
-                <span id="confidenceLabel" class="text-base font-bold text-orange-500">-</span>
-            </div>
+
+        </div>
+
+        <button
+            id="analyzeBtn"
+            class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-600/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+
+            <svg id="spinner"
+                 class="hidden animate-spin h-5 w-5 text-white"
+                 xmlns="http://www.w3.org/2000/svg"
+                 fill="none"
+                 viewBox="0 0 24 24">
+
+                <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4">
+                </circle>
+
+                <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
+                </path>
+
+            </svg>
+
+            <span id="btnText">
+                Analizar Imagen
+            </span>
+
+        </button>
+
+    </div>
+
+    <div id="resultContainer"
+         class="hidden mt-6 bg-slate-950/60 rounded-2xl p-5 border border-slate-800/60">
+
+        <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase mb-3">
+            Resultado del Análisis
+        </h3>
+
+        <div class="flex justify-between items-center py-2 border-b border-slate-800">
+
+            <span class="text-sm text-slate-400">
+                Detección de Marca:
+            </span>
+
+            <span id="detectionLabel"
+                  class="text-base font-bold text-white">
+                -
+            </span>
+
+        </div>
+
+        <div class="flex justify-between items-center py-2 pt-3">
+
+            <span class="text-sm text-slate-400">
+                Confianza de IA:
+            </span>
+
+            <span id="confidenceLabel"
+                  class="text-base font-bold text-orange-500">
+                -
+            </span>
+
         </div>
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="app.js"></script>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script src="app.js"></script>
+
 </body>
 </html>
