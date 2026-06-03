@@ -1,21 +1,31 @@
-# 1. Usar una imagen oficial de Python ligera
+# Imagen base de Python compatible con TensorFlow
 FROM python:3.10-slim
 
-# 2. Configurar la carpeta de trabajo dentro del servidor
+# Directorio de trabajo
 WORKDIR /app
 
-# 3. Instalar las librerías necesarias de golpe
-RUN pip install --no-cache-dir fastapi uvicorn python-multipart keras tensorflow-cpu pillow numpy
+# Instalar dependencias del sistema necesarias
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# 4. Copiar los archivos de tu proyecto al servidor
-COPY ./backend /app/backend
-COPY ./frontend /app/frontend
+# Copiar requirements
+COPY backend/requirements.txt .
 
-# 5. Movernos a la carpeta del backend para ejecutar
+# Instalar dependencias Python
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar todo el proyecto
+COPY backend /app/backend
+COPY frontend /app/frontend
+
+# Entrar al backend
 WORKDIR /app/backend
 
-# Exponer el puerto nativo que usa Hugging Face
-EXPOSE 7860
+# Puerto que Render asignará dinámicamente
+EXPOSE 10000
 
-# 6. Comando para arrancar el servidor de FastAPI
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Iniciar FastAPI
+CMD ["python", "main.py"]
