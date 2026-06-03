@@ -2,8 +2,9 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
 import os
+
+# Forzar backend TensorFlow
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
@@ -27,9 +28,12 @@ app.add_middleware(
 # ==========================
 # FRONTEND
 # ==========================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+
 app.mount(
     "/static",
-    StaticFiles(directory="/app/frontend"),
+    StaticFiles(directory=FRONTEND_DIR),
     name="static"
 )
 
@@ -38,7 +42,7 @@ app.mount(
 # ==========================
 MODEL_PATH = "STREET_DEAL_PRO_LIMPIO.h5"
 
-print("Instanciando arquitectura base limpia de MobileNetV2...")
+print("Instanciando MobileNetV2...")
 
 base_model = keras.applications.MobileNetV2(
     input_shape=(224, 224, 3),
@@ -63,9 +67,10 @@ model = keras.models.Sequential([
 model.build((None, 224, 224, 3))
 
 print("Cargando pesos...")
+
 model.load_weights(MODEL_PATH)
 
-print("STREET DEAL PRO LISTO")
+print("STREET DEAL LISTO")
 
 # ==========================
 # CLASES
@@ -98,30 +103,32 @@ CLASSES = [
 ]
 
 # ==========================
-# PAGINA PRINCIPAL
+# FRONTEND
 # ==========================
 @app.get("/")
-async def home():
-    return FileResponse("/app/frontend/index.html")
+def frontend():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "index.html")
+    )
 
 # ==========================
-# PREDICCION
+# API
 # ==========================
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
 
-    content = await file.read()
+    image_bytes = await file.read()
 
     image = Image.open(
-        io.BytesIO(content)
+        io.BytesIO(image_bytes)
     ).convert("RGB")
 
     image = image.resize((224, 224))
 
-    input_array = (
-        np.array(image, dtype=np.float32)
-        / 255.0
-    )
+    input_array = np.array(
+        image,
+        dtype=np.float32
+    ) / 255.0
 
     input_array = np.expand_dims(
         input_array,
